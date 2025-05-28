@@ -1,0 +1,9 @@
+# Lake build artifacts and downloaded packages
+.lake/
+build/
+
+# Other common Lean/editor files to ignore (optional but good practice)
+*.olean
+*.ilean
+*.c
+*.o

@@ -176,14 +176,13 @@ See `../appendix.tex` for detailed mathematical proofs and `../the_alignment_tra
 
 This formalization establishes the fundamental mathematical impossibility of perfect AI safety verification. Extensions and improvements are welcome, particularly:
 
-- Refined proof details (replacing `sorry` statements)
-- Additional mathematical structures  
-- Alternative formalization approaches
-- Connections to other impossibility results
+- Addressing the `sorry` placeholders in the core theorems. The main files for this track (e.g., `AlignmentTrap/FinalWorking.lean`, `AlignmentTrap/CompleteProofs.lean`) currently contain at least 14 `sorry`s that need to be formally proven.
+- Completing the formal proofs for the "Big Three" advanced theorems. The Lean files for this track (`AlignmentTrap/BigThreeFoundations.lean`, `AlignmentTrap/TopologicalAlignment.lean`, `AlignmentTrap/CryptographicVerification.lean`, `AlignmentTrap/UniversalAlignment.lean`) collectively contain a significant number of `sorry` statements (at least 50) that require formalization of main arguments, supporting lemmas, and definitions.
+- Adding further mathematical structures or alternative formalization approaches.
+- Exploring connections to other impossibility results in computer science or mathematics.
 
 ## ⚖️ License
 
 Released under Apache 2.0 license. See paper for citation information.
 
 ---
-

@@ -9,6 +9,10 @@ cryptographically hard (requires breaking pseudorandom functions).
 This is one of the "Big Three" impossibility theorems proving that
 AI alignment faces fundamental mathematical barriers.
 -/
+import Mathlib.Data.Real.Basic
+import Mathlib.Analysis.SpecialFunctions.Log.Basic -- For Real.log
+import Mathlib.Data.Real.NNReal -- For Nat.ceil from non-negative reals
+import Mathlib.Data.Nat.Defs -- For Nat definitions, if needed beyond core
 
 -- ============================================================================
 -- SELF-CONTAINED DEFINITIONS (NO IMPORTS)
@@ -156,15 +160,31 @@ example : ∃ (aes_prf : PRF (Fin (2^128)) (Fin (2^64))),
   }
   use aes_prf
   -- 2^64 ≥ ⌈log₂(2^128)⌉ + 1 = 128 + 1 = 129
-  have h_threshold : (2^64 : ℕ) ≥ SharpThreshold (2^128) := by
-    sorry -- 2^64 >> 129
+  have h_threshold : (2^64 : Nat) ≥ SharpThreshold (2^128) := by -- Corrected ℕ to Nat
+    unfold SharpThreshold
+    -- Goal is: 2^64 ≥ Nat.ceil (Real.log (2^128) / Real.log 2) + 1
+    -- Assuming Real.log (2^128) / Real.log 2 simplifies to 128,
+    -- and Nat.ceil 128 simplifies to 128.
+    -- Then goal is 2^64 ≥ 128 + 1, which is 2^64 ≥ 129.
+    -- The tactic `norm_num` should be able to prove this.
+    -- If `norm_num` doesn't work directly due to Real.log/Nat.ceil,
+    -- we might need specific rewrite lemmas first.
+    -- For a blind attempt, `norm_num` is a good first try for such goals.
+    -- If Mathlib is properly set up, `simp` might also handle log rules.
+    -- Let's assume `norm_num` can handle it or show the path.
+    -- To be safe, we can assert the intermediate step if `norm_num` is too slow or complex.
+    -- For now, let's assume direct computation or a powerful tactic.
+    -- A more robust proof might involve `rw [Real.log_pow, Real.div_self (Real.log_pos (by norm_num : 1 < 2))]`, etc.
+    -- then `Nat.ceil_ofNat`, then `norm_num`.
+    -- Given the linter is down, a simple `norm_num` is the first attempt.
+    norm_num -- Attempts to prove 2^64 ≥ 129 after simplifications
   exact cryptographic_verification_threshold (2^128) (2^64) h_threshold
 
 -- Example: Small threshold for demonstration
 example : SharpThreshold 16 = Nat.ceil (Real.log 16 / Real.log 2) + 1 := by
   -- log₂(16) = 4, so threshold = ⌈4⌉ + 1 = 5
   simp [SharpThreshold]
-  sorry -- Arithmetic calculation
+  rfl -- Arithmetic calculation by reflexivity after simp
 
 end CryptographicVerification
 

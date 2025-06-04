@@ -1,6 +1,5 @@
 # Alignment Trap: Complete Formalization Without Sorrys
 
-```lean
 /-
 Copyright (c) 2025 AI Safety Research. All rights reserved.
 Released under Apache 2.0 license.

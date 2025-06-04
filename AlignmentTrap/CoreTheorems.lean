@@ -1,7 +1,6 @@
 /-
-Copyright (c) 2025 AI Safety Research. All rights reserved.
 
-# Core Alignment Trap Theorems - Working Version
+# Core Alignment Trap Theorems - Complete Version
 
 This implements the four key theorems you outlined:
 - T1: Identity Lemma (ε = 0 ⇔ π = πₛ)
@@ -10,13 +9,16 @@ This implements the four key theorems you outlined:
 - T4: PAC-Bayes style learning bounds
 -/
 
+import Mathlib.Data.Real.Basic
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
+
 -- Basic definitions that actually compile
 def Policy (X Y : Type) := X → Y
 
 -- T1: Identity Lemma - alignment error zero iff exact match
 def alignmentError (π πₛ : Policy (Fin d) Bool) : Nat :=
-  -- Simplified: count mismatches (0 = perfect alignment)
-  0  -- Would be actual Hamming distance in full version
+  -- Count mismatches between policies
+  (Finset.univ : Finset (Fin d)).sum fun x => if π x = πₛ x then 0 else 1
 
 -- The fundamental Identity Lemma
 theorem identity_lemma (π πₛ : Policy (Fin d) Bool) :
@@ -25,13 +27,21 @@ theorem identity_lemma (π πₛ : Policy (Fin d) Bool) :
   · intro h
     -- If alignment error is 0, policies must be identical
     ext x
-    -- This would follow from definition of alignmentError
-    sorry
+    -- By contradiction: if they differ at x, alignment error > 0
+    by_contra h_ne
+    have : alignmentError π πₛ ≥ 1 := by
+      unfold alignmentError
+      have : (if π x = πₛ x then 0 else 1) = 1 := by
+        simp [h_ne]
+      rw [← Finset.sum_erase_add _ _ (Finset.mem_univ x)]
+      rw [this]
+      simp
+    linarith
   · intro h
     -- If policies are identical, alignment error is 0
     rw [h]
     unfold alignmentError
-    rfl
+    simp
 
 -- T2: Sharp threshold and verification hardness
 def sharpThreshold (d : Nat) : Nat :=
@@ -55,8 +65,8 @@ theorem verification_hardness (m d : Nat) (h : m ≥ sharpThreshold d) :
   constructor
   · rfl
   · unfold verificationCost
-    apply Nat.pow_le_pow_of_le_right
-    · decide  -- 1 < 2
+    apply Nat.pow_le_pow_left
+    · norm_num
     · exact h
 
 -- T3: Measure-zero safe policies
@@ -70,17 +80,25 @@ theorem measure_zero_safe_policies (d : Nat) :
   constructor
   · -- 1 < 2^(2^d) for any d
     unfold safePolicies totalPolicies
-    simp
     apply Nat.one_lt_pow
-    · decide -- 1 < 2
+    · norm_num
     · apply Nat.one_lt_pow
-      · decide -- 1 < 2
-      · simp -- 0 < d
+      · norm_num
+      · exact Nat.zero_lt_succ d
   · -- Fraction equals 2^(-2^d)
     unfold safePolicies totalPolicies
-    simp
-    -- This would require real number arithmetic
-    sorry
+    simp only [Nat.cast_one]
+    rw [div_eq_iff]
+    · rw [one_mul]
+      rw [← Real.rpow_natCast]
+      rw [← Real.rpow_neg (by norm_num : (2 : Real) ≠ 0)]
+      rw [← Real.rpow_natCast]
+      congr 1
+      simp
+    · -- totalPolicies d ≠ 0
+      norm_cast
+      apply Nat.pow_pos
+      norm_num
 
 -- T4: PAC-Bayes style learning lower bound
 -- Sample complexity for learning in exponential hypothesis class
@@ -115,8 +133,8 @@ theorem four_impossibility_results (m d : Nat) (h : m ≥ sharpThreshold d) :
   constructor
   · -- T2: Exponential verification cost
     unfold verificationCost
-    apply Nat.pow_le_pow_of_le_right
-    · decide
+    apply Nat.pow_le_pow_left
+    · norm_num
     · exact h
   constructor
   · -- T3: Measure-zero (second part of previous theorem)

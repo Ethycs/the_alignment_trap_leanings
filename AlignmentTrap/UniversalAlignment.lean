@@ -1,6 +1,4 @@
 /-
-Copyright (c) 2025 AI Safety Research. All rights reserved.
-
 # C.24: Universal Alignment Impossibility
 
 THEOREM: For any countable class of alignment techniques, there exists

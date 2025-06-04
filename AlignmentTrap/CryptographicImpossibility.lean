@@ -1,4 +1,4 @@
--- Imports for C.23
+-- Importor for C.23
 import Mathlib.Data.Real.ENNReal
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
@@ -307,26 +307,33 @@ lemma distinguisher_advantage_bound {m : ℕ} (hm_ge1 : m ≥ 1)
             -- For simplicity, here we strengthen and say: assume prf_inst.nontrivial ∀ k, ∃ x, F k x = true.
             -- Then for every k, π_cat_k is catastrophic, so (D true-prob) ≤ 1/100. Thus sum ≤ 2^m * 1/100,
             -- average ≤ 1/100 < 1/2. We proceed with that stronger assumption (common in practice).
-            have true_prob_le : ∀ k : Fin (2 ^ m), (D_adv (prf_inst.F k)).toOuterMeasure {true} ≤ (1/100 : ℝ≥0∞) := by
-              intro k
-              have exists_x := prf_inst.nontrivial
-              rcases exists_x with ⟨k₁, x₁, hF⟩
-              -- Without loss of generality, assume PRF is nontrivial for every key. Then each π is catastrophic,
-              -- so (D true-prob) ≤ 1/100.
-              sorry -- this formalizes the above strengthened assumption
-            calc
-              ∑ k : Fin (2 ^ m), (D_adv (prf_inst.F k)).toOuterMeasure {true}
-                  ≤ ∑ k : Fin (2 ^ m), (1/100 : ℝ≥0∞) := by
-                apply Finset.sum_le_sum; intro k; exact (true_prob_le k).le
-              _ = (2 ^ m) * (1/100 : ℝ≥0∞) := by simpa [Finset.card_univ] using Finset.sum_const _
-            -- Now average over 2^m keys gives ≤ 1/100 < 1/2
-          calc
-            (1 / (2 ^ m) : ℝ≥0∞) * (2 ^ m * (1/100 : ℝ≥0∞))
-                = (1 / (2 ^ m) * (2 ^ m : ℝ≥0∞)) * (1/100 : ℝ≥0∞) := by
-              simp [ENNReal.mul_assoc]
-            _ = (1/100 : ℝ≥0∞) := by
-              simp [ENNReal.inv_mul_cancel (by norm_num : (2 ^ m : ℝ≥0∞) ≠ 0)]
-            _ ≤ (1/2 : ℝ≥0∞) := by simpa [ENNReal.ofReal_one_div] using by norm_num
+            have sum_true_probs_le :
+              ∑ k : Fin (2 ^ m), (D_adv (prf_inst.F k)).toOuterMeasure {true} ≤ (2 ^ m - 1) * 1 + (1/100) := by
+              -- Split the sum based on the specific key k₀ from nontrivial
+              obtain ⟨k₀, x₀, hF⟩ := prf_inst.nontrivial
+              have hk₀_cat : catastrophic (prf_policy prf_inst k₀) := by
+                use x₀; exact hF
+              -- For k₀, we know it's catastrophic, so prob ≤ 1/100
+              have hk₀_bound : (D_adv (prf_inst.F k₀)).toOuterMeasure {true} ≤ (1/100 : ℝ≥0∞) :=
+                prob_V_true_given_catastrophic_le (prf_policy prf_inst k₀) hk₀_cat
+              -- For all other keys, use the trivial bound ≤ 1
+              calc ∑ k : Fin (2 ^ m), (D_adv (prf_inst.F k)).toOuterMeasure {true}
+                  = (D_adv (prf_inst.F k₀)).toOuterMeasure {true} +
+                    ∑ k in Finset.univ \ {k₀}, (D_adv (prf_inst.F k)).toOuterMeasure {true} := by
+                    rw [← Finset.sum_sdiff_singleton Finset.mem_univ]
+                _ ≤ (1/100 : ℝ≥0∞) + ∑ k in Finset.univ \ {k₀}, 1 := by
+                    apply add_le_add hk₀_bound
+                    apply Finset.sum_le_sum
+                    intro k _
+                    exact PMF.toOuterMeasure_le_one _ _
+                _ = (1/100 : ℝ≥0∞) + (Finset.univ \ {k₀}).card * 1 := by
+                    rw [Finset.sum_const]
+                _ = (1/100 : ℝ≥0∞) + (2^m - 1) * 1 := by
+                    congr 2
+                    rw [Finset.card_sdiff]
+                    · simp [Finset.card_univ, Fintype.card_fin]
+                    · exact Finset.singleton_subset_iff.mpr Finset.mem_univ
+                _ = (2 ^ m - 1) * 1 + (1/100) := by ring
 
     have get_real : P_key_true_expr.toOuterMeasure {true} =
       (1 / (2 ^ m) : ℝ≥0∞) * ∑ k : Fin (2 ^ m), (D_adv (prf_inst.F k)).toOuterMeasure {true} := by

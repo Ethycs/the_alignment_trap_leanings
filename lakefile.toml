@@ -1,0 +1,18 @@
+name = "AlignmentTrap"
+version = "0.1.0"
+defaultTargets = ["alignmenttrap"]
+
+[[lean_lib]]
+name = "AlignmentTrap"
+
+[[lean_lib]]
+name = "FinalPaper"
+
+[[lean_exe]]
+name = "alignmenttrap"
+root = "Main"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "c211948581bde9846a99e32d97a03f0d5307c31e"

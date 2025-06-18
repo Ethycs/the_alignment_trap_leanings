@@ -7,3 +7,4 @@ build/
 *.ilean
 *.c
 *.o
+/.lake
